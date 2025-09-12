@@ -13,19 +13,32 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
         """
         Should return a DatasetInfo object describing <string> type values for a url and it's corresponding text.
         """
-        return datasets.DatasetInfo()
+        return datasets.DatasetInfo(description=_DESCRIPTION)
 
     def _split_generators(self, dl_manager: datasets.DownloadManager) -> List[datasets.SplitGenerator]:
         """
         Should return a SplitGenerator object which downloads your data and creates train and validation splits.
         """
-        return datasets.SplitGenerator(),
+        return datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"filepaths": dl_manager.download_and_extract(_DATA_URL)}),
     
     def _generate_examples(self, filepaths: List[str]) -> Iterator[Tuple[Any, Dict[str, str]]]:
         """
         Streams raw data from the downloaded file and yields tuples consisting of a unique ID and the url/cleaned text.
         Should call the functions you defined in homework.py. 
         """
+        _id = 0
+        for filepath in filepaths:
+            for url, html_text in homework.read_warc_file(filepath):
+                text = homework.html_to_text(str(html_text))
+                cleaned_text = homework.clean_text(text)
+                cleaned_nopii_text = homework.replace_pii(cleaned_text)
+                passes_check = homework.heuristic_quality_filter(cleaned_nopii_text)
+                if passes_check:
+                    yield _id, {
+                        "url": url,
+                        "text": cleaned_nopii_text
+                    }
+                    _id += 1
  
 if __name__ == "__main__":   
     # Note: Calling load_dataset caches the processed dataset locally.
