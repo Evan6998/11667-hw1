@@ -5,7 +5,7 @@ from typing import List, Iterator, Tuple, Dict, Any
 
 logger = datasets.logging.get_logger(__name__)
 
-_DESCRIPTION = ""
+_DESCRIPTION = "Generated dataset with cleaned Common Crawl data."
 _DATA_URL = "https://data.commoncrawl.org/crawl-data/CC-MAIN-2018-17/segments/1524125937193.1/warc/CC-MAIN-20180420081400-20180420101400-00000.warc.gz" 
  
 class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
