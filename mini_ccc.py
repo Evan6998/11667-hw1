@@ -29,13 +29,13 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
         train = datasets.SplitGenerator(
             name=datasets.Split.TRAIN,
             gen_kwargs={
-                "filepaths": data,
+                "filepaths": [data],
             },
         )
         validation = datasets.SplitGenerator(
             name=datasets.Split.VALIDATION,
             gen_kwargs={
-                "filepaths": data,
+                "filepaths": [data],
             },
         )
         return [train, validation]
@@ -48,16 +48,19 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
         _id = 0
         for filepath in filepaths:
             for url, html_text in homework.read_warc_file(filepath):
-                text = homework.html_to_text(str(html_text))
-                cleaned_text = homework.clean_text(text)
-                cleaned_nopii_text = homework.replace_pii(cleaned_text)
-                passes_check = homework.heuristic_quality_filter(cleaned_nopii_text)
-                if passes_check:
-                    yield str(_id), {
-                        "context": cleaned_nopii_text,
-                        "url": url
-                    }
-                    _id += 1
+                try:
+                    text = homework.html_to_text(str(html_text))
+                    cleaned_text = homework.clean_text(text)
+                    cleaned_nopii_text = homework.replace_pii(cleaned_text)
+                    passes_check = homework.heuristic_quality_filter(cleaned_nopii_text)
+                    if passes_check:
+                        yield str(_id), {
+                            "context": cleaned_nopii_text,
+                            "url": url
+                        }
+                        _id += 1
+                except Exception as e:
+                    logger.warning(f"Error processing {url}: {e}")
  
 if __name__ == "__main__":   
     # Note: Calling load_dataset caches the processed dataset locally.
