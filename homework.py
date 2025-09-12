@@ -95,9 +95,8 @@ def heuristic_quality_filter(text: str) -> bool:
 
 
 def _tokens(s: str, ngram: int = 1) -> set:
-    # 简单分词（按非字母数字划分），然后做 n-gram（词级）
     words = re.split(r"[^a-z0-9]+", s)
-    words = [w for w in words if w]  # 去空
+    words = [w for w in words if w]
     if ngram <= 1:
         return set(words)
     return set(tuple(words[i:i+ngram]) for i in range(len(words)-ngram+1))
