@@ -26,7 +26,6 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
         Streams raw data from the downloaded file and yields tuples consisting of a unique ID and the url/cleaned text.
         Should call the functions you defined in homework.py. 
         """
-        _id = 0
         for filepath in filepaths:
             for url, html_text in homework.read_warc_file(filepath):
                 text = homework.html_to_text(str(html_text))
@@ -34,11 +33,7 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
                 cleaned_nopii_text = homework.replace_pii(cleaned_text)
                 passes_check = homework.heuristic_quality_filter(cleaned_nopii_text)
                 if passes_check:
-                    yield _id, {
-                        "url": url,
-                        "text": cleaned_nopii_text
-                    }
-                    _id += 1
+                    yield url, cleaned_nopii_text
  
 if __name__ == "__main__":   
     # Note: Calling load_dataset caches the processed dataset locally.
