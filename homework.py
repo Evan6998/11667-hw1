@@ -4,7 +4,7 @@ import requests
 import json
 from utils import  read_warc_file, read_wet_file
 from datasets import load_dataset
-from typing import Set, Dict
+from typing import Set, Dict, Iterable, List
 import string
 from bs4 import BeautifulSoup
 
@@ -59,8 +59,11 @@ def clean_text(text: str) -> str:
         if not any(char in string.punctuation for char in para):
             continue
 
-        if not any(word.isalpha() and len(word) > 100 for word in para.split()):
-            cleaned_paragraphs.append(para)
+        # Remove any paragraphs that contain more than 100 alphanumeric characters with no whitespace between them.
+        if re.search(r'[a-zA-Z0-9]{100,}', para):
+            continue
+
+        cleaned_paragraphs.append(para)
         
     return '\n'.join(cleaned_paragraphs)
 
@@ -89,19 +92,44 @@ def heuristic_quality_filter(text: str) -> bool:
     if valid_chars / total_chars < 0.8:
         return False
     return True
-    
 
-def deduplicate_texts(texts: list[str]) -> list[str]:
+
+def _tokens(s: str, ngram: int = 1) -> set:
+    # 简单分词（按非字母数字划分），然后做 n-gram（词级）
+    words = re.split(r"[^a-z0-9]+", s)
+    words = [w for w in words if w]  # 去空
+    if ngram <= 1:
+        return set(words)
+    return set(tuple(words[i:i+ngram]) for i in range(len(words)-ngram+1))
+
+def jaccard(a: Iterable, b: Iterable) -> float:
+    A, B = set(a), set(b)
+    if not A and not B:
+        return 1.0
+    return len(A & B) / len(A | B)
+
+
+def deduplicate_texts(texts: List[str], threshold: float = 0.8, ngram: int = 1) -> List[str]:
     """Deduplicates text by removing duplicate sentences.
     Args:
         text (str): Text to deduplicate.
     Returns:
         str: Deduplicated text. Implemented a simple Jacard similarity based deduplication. 
     """
-    ans = set()
-    for text in texts:
-        ans.add(text)
-    return list(ans)
+    kept = []
+    kept_toksets = []
+
+    for t in texts:
+        tok = _tokens(t, ngram=ngram)
+        duplicate = False
+        for toks in kept_toksets:
+            if jaccard(tok, toks) >= threshold:
+                duplicate = True
+                break
+        if not duplicate:
+            kept.append(t)
+            kept_toksets.append(tok)
+    return kept
 
 
 if __name__ == '__main__' :
