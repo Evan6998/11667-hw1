@@ -25,7 +25,7 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
         """
         Should return a SplitGenerator object which downloads your data and creates train and validation splits.
         """
-        data = dl_manager.download([_DATA_URL])
+        data = dl_manager.download_and_extract(_DATA_URL)
         train = datasets.SplitGenerator(
             name=datasets.Split.TRAIN,
             gen_kwargs={
@@ -57,6 +57,7 @@ class MiniCleanedCommonCrawl(datasets.GeneratorBasedBuilder):
                         "context": cleaned_nopii_text,
                         "url": url
                     }
+                    _id += 1
  
 if __name__ == "__main__":   
     # Note: Calling load_dataset caches the processed dataset locally.
